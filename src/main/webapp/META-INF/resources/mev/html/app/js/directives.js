@@ -44,8 +44,14 @@ angular.module('myApp.directives', []).
                       .append("svg")
                       .attr("width", scope.visParams.width )
                       .attr("height", scope.visParams.height);
-		
-		
+		//Temporary SVG for hierarchy tree
+		var svgt = d3.select(element[0])
+			.append('svg')
+			.attr('width', scope.visParams.width) //Use the same height and width parameters as the heatmap.
+			.attr('height', scope.visParams.height) //May also be used for updating function and resizing.
+			.append('g')
+			.attr('transform','translate(40,0)');
+			
 		var xCellScale = function(index, cols, cellPs) {
             return (index%cols)*(cellPs.width+(cellPs.padding/2));         
           }
@@ -140,7 +146,37 @@ angular.module('myApp.directives', []).
                .attr("fill", function(d) {
                  return "rgb(" + redColorControl(d, scope.inputcolor) + "," + greenColorControl(d, scope.inputcolor) + ","+blueColorControl(d, scope.inputcolor)+")";
                });	
-			
+					//Build the hierarchy tree
+					var cluster = d3.layout.cluster()
+						.size([scope.visParams.height, scope.visParams.width - 160]);
+					d3.json("../readme.json", function(json){
+						var nodes = cluster.nodes(json)
+						
+						var link = svg.selectAll("path.link")
+							.data(cluster.links(nodes))
+							.enter().append("path")
+							.attr("class", "link")
+							.attr("d", elbow);
+						
+						var node = svg.selectAll("g.node")
+							.data(nodes)
+							.enter().append("g")
+							.attr("class","node")
+							.attr("transform", function(d){return "translate(" + d.y + "," + d.x + ")";});
+						
+						node.append("circle")
+							.attr("r", 4.5);
+						
+						node.append("text")
+							.attr("dx", function(d){return d.children ? -8:8;})
+							.attr("dy", 3)
+							.attr("text-anchor", function(d){return d.children ? "end" : "start";})
+							.text(function(d){return d.name});
+					});
+					function elbow(d, i){
+						return "M" + d.source.y + "," + d.source.x
+						+ "V" + d.target.x + "H" + d.target.y;
+					}
         }
         
         var updateVisualization = function () {
