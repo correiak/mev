@@ -87,29 +87,40 @@ angular.module('myApp.directives', []).
 			+ "V" + d.target.x + "H" + d.target.y;
 		};
 		function click(d){
-			var color = '#ffffff';
+			var nColor = '#ffffff';
+			var pColor = '#cccccc';
 			var cir = d3.selectAll("svg").selectAll("circle").filter(function(db){
-				return d === db ? 1 : 0});
+				return d === db ? 1 : 0
+			});
+			var path = d3.selectAll("svg").selectAll("path").filter(function(dp){
+				return d.x === dp.source.x ? 1 : 0
+			});
 			if(cir.style('fill') == '#00ff00'){
-					cir.style('fill', color);
+					cir.style('fill', nColor);
+					path.style('stroke', pColor);
 				}
 				else{
-					color = '#00ff00';
-					cir.style('fill', color);
+					nColor = '#00ff00';
+					pColor = '#00ff00';
+					cir.style('fill', nColor);
+					path.style('stroke', pColor);
 				};
 			if(d.children){
-				walk(d, color);
+				walk(d, nColor, pColor);
 			};
 		};
-		function walk(d, color){
+		function walk(d, nColor, pColor){
 			//alert(d.name);
 			d.children.forEach(function(dc){
 				d3.selectAll("svg").selectAll("circle").filter(function(db){
 					return dc === db ? 1 : 0;
 				})
-				.style("fill",color);
+				.style("fill",nColor);
+				d3.selectAll("svg").selectAll("path").filter(function(dp){
+					return dc.x === dp.source.x ? 1 : 0;
+				}).style("stroke", pColor);
 				if(dc.children){
-					walk(dc, color);
+					walk(dc, nColor, pColor);
 				}
 			});
 		};
