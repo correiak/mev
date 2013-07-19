@@ -87,21 +87,29 @@ angular.module('myApp.directives', []).
 			+ "V" + d.target.x + "H" + d.target.y;
 		};
 		function click(d){
-				d3.selectAll("svg").selectAll("circle").filter(function(db){
-					return d === db ? 1 : 0}).style("fill","green"); 
-				if(d.children){
-					walk(d);
+			var color = '#ffffff';
+			var cir = d3.selectAll("svg").selectAll("circle").filter(function(db){
+				return d === db ? 1 : 0});
+			if(cir.style('fill') == '#00ff00'){
+					cir.style('fill', color);
+				}
+				else{
+					color = '#00ff00';
+					cir.style('fill', color);
 				};
+			if(d.children){
+				walk(d, color);
+			};
 		};
-		function walk(d){
+		function walk(d, color){
 			//alert(d.name);
 			d.children.forEach(function(dc){
 				d3.selectAll("svg").selectAll("circle").filter(function(db){
 					return dc === db ? 1 : 0;
 				})
-				.style("fill","green");
+				.style("fill",color);
 				if(dc.children){
-					walk(dc);
+					walk(dc, color);
 				}
 			});
 		};
