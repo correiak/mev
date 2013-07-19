@@ -53,30 +53,29 @@ angular.module('myApp.directives', []).
 			.attr('transform','translate(40,0)');
 		var cluster = d3.layout.cluster()
 			.size([scope.visParams.height, scope.visParams.width - 160])
-			.separation(function(a,b){
+			.separation(function(a,b){ //Define a separation of neighboring nodes. Make neighbor distances equidistant so they can align with heatmap.
 				return a.parent == b.parent ? 1:1;
 			});
-		d3.json("readme.json", function(json){
-			var nodes = cluster.nodes(json)
+		d3.json("readme.json", function(json){ //Read the JSON that has the tree structure
+			var nodes = cluster.nodes(json) //Create the nodes based on the tree structure.
 			
-			var link = svgt.selectAll("path.link")
+			var link = svgt.selectAll("path.link") //Create the branches.
 				.data(cluster.links(nodes))
 				.enter().append("path")
 				.attr("class", "link")
-				.attr("d", elbow);
+				.attr("d", elbow); //Call function elbow() so that the paths drawn are straight and not curved.
 			
-			var node = svgt.selectAll("g.node")
+			var node = svgt.selectAll("g.node") //Take the data in nodes and create individual nodes.
 				.data(nodes)
 				.enter().append("g")
 				.attr("class","node")
-				.on("click", click)
+				.on("click", click) //Call function that will highlight the child branches from this node. Indicates to user which clustering they are interested in.
 				.attr("transform", function(d){return "translate(" + d.y + "," + d.x + ")";})
 							
-			node.append("circle")
+			node.append("circle") //Add a circle to represent each node.
 				.attr("r", 2)
-				//testing
-				
-			node.append("text")
+
+			node.append("text") //Add labels to each node.
 				.attr("dx", function(d){return d.children ? -8:8;})
 				.attr("dy", 3)
 				.attr("text-anchor", function(d){return d.children ? "end" : "start";})
@@ -87,14 +86,15 @@ angular.module('myApp.directives', []).
 			+ "V" + d.target.x + "H" + d.target.y;
 		};
 		function click(d){
-			var nColor = '#ffffff';
-			var pColor = '#cccccc';
+			var nColor = '#ffffff'; //Initial nonselected color of a node
+			var pColor = '#cccccc'; //Initial nonselected color of a branch
 			var cir = d3.selectAll("svg").selectAll("circle").filter(function(db){
 				return d === db ? 1 : 0
-			});
+			}); //Selects all the circles representing nodes but only those which were the clicked circle, using datum as the equality filter.
 			var path = d3.selectAll("svg").selectAll("path").filter(function(dp){
-				return d.x === dp.source.x ? 1 : 0
-			});
+				return (d.x === dp.source.x && d.y === dp.source.y) ? 1 : 0
+			}); //Selects all paths but only those which have the same source coordinates as the node clicked.
+			//Check the state of the clicked node. If 'active' (color is green) swap to inactive colors and pass those colors down to all children and vice versa.
 			if(cir.style('fill') == '#00ff00'){
 					cir.style('fill', nColor);
 					path.style('stroke', pColor);
@@ -105,21 +105,22 @@ angular.module('myApp.directives', []).
 					cir.style('fill', nColor);
 					path.style('stroke', pColor);
 				};
-			if(d.children){
+			if(d.children){ //Check if the node clicked is not a leaf. If the node has children, travel down the three updating the colors to indicate selection.
 				walk(d, nColor, pColor);
 			};
 		};
+		//Function to walk down the tree from a selected node and apply proper color assignments based on selection.
 		function walk(d, nColor, pColor){
 			//alert(d.name);
-			d.children.forEach(function(dc){
+			d.children.forEach(function(dc){ //Loop through each child, recursively calling walk() as necessary.
 				d3.selectAll("svg").selectAll("circle").filter(function(db){
 					return dc === db ? 1 : 0;
 				})
 				.style("fill",nColor);
 				d3.selectAll("svg").selectAll("path").filter(function(dp){
-					return dc.x === dp.source.x ? 1 : 0;
+					return (dc.x === dp.source.x && dc.y === dp.source.y) ? 1 : 0;
 				}).style("stroke", pColor);
-				if(dc.children){
+				if(dc.children){ //Check if children exist, if so, recurse the previous function.
 					walk(dc, nColor, pColor);
 				}
 			});
