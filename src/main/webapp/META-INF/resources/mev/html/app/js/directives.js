@@ -45,6 +45,7 @@ angular.module('myApp.directives', []).
                       .attr("width", scope.visParams.width )
                       .attr("height", scope.visParams.height);
 		//Temporary SVG for hierarchy tree
+		var fill = d3.scale.category20();
 		var svgt = d3.select(element[0])
 			.append('svg')
 			.attr('width', scope.visParams.width) //Use the same height and width parameters as the heatmap.
@@ -52,7 +53,10 @@ angular.module('myApp.directives', []).
 			.append('g')
 			.attr('transform','translate(40,0)');
 		var cluster = d3.layout.cluster()
-						.size([scope.visParams.height, scope.visParams.width - 160]);
+						.size([scope.visParams.height, scope.visParams.width - 160])
+						.separation(function(a,b){
+							return a.parent == b.parent ? 1:1;
+						});
 					d3.json("readme.json", function(json){
 						var nodes = cluster.nodes(json)
 						
@@ -66,11 +70,40 @@ angular.module('myApp.directives', []).
 							.data(nodes)
 							.enter().append("g")
 							.attr("class","node")
-							.attr("transform", function(d){return "translate(" + d.y + "," + d.x + ")";});
-						
+							.attr("transform", function(d){return "translate(" + d.y + "," + d.x + ")";})
+							.on("click",click);
+							
 						node.append("circle")
-							.attr("r", 4.5);
+							.attr("r", 2)
+							//testing
+							.style("fill", function(d){
+								return fill(d.group);
+							})
+							.on("mouseover", fade(.1))
+							.on("mouseout", fade(1));
+					
+						var linkedByIndex = {};
+						cluster.links(nodes).forEach(function(d){
+							linkedByIndex[d.source.index + ',' + d.target.index] = 1;
+						});
 						
+						function isConnected(a,b){
+							return linkedByIndex[a.index + ',' + b.index] || linkedByIndex[b.index + ',' + a.index] || a.index == b.index;
+						};
+						
+						function fade(opacity){
+							return function(d){
+								node.style("stroke-opacity", function(o){
+									var thisOpacity = isConnected(d, o) ? 1 : opacity;
+									this.setAttribute('fill-opacity', thisOpacity);
+									return thisOpacity;
+								});
+								
+								link.style("stroke-opacity", opacity).style('stroke-opacity', function(o){
+									return o.source === d || o.target === d ? 1 : opacity;
+								});
+							};
+						};
 						node.append("text")
 							.attr("dx", function(d){return d.children ? -8:8;})
 							.attr("dy", 3)
@@ -80,8 +113,13 @@ angular.module('myApp.directives', []).
 					function elbow(d, i){
 						return "M" + d.source.y + "," + d.source.x
 						+ "V" + d.target.x + "H" + d.target.y;
-					}
-				
+					};
+					function click(d, i){
+						d3.select(this).select("circle").style('fill','blue');
+						d.children.forEach(function(dc){
+							dc.select("circle").style('fill','red');
+						});
+					};
 		var xCellScale = function(index, cols, cellPs) {
             return (index%cols)*(cellPs.width+(cellPs.padding/2));         
           }
