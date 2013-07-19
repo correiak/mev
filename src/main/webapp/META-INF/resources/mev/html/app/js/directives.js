@@ -218,8 +218,7 @@ angular.module('myApp.directives', []).
                })
                .attr("fill", function(d) {
                  return "rgb(" + redColorControl(d, scope.inputcolor) + "," + greenColorControl(d, scope.inputcolor) + ","+blueColorControl(d, scope.inputcolor)+")";
-               });	
-					//Build the hierarchy tree
+               });
 					
         }
         
