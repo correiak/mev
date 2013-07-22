@@ -45,6 +45,7 @@ angular.module('myApp.directives', []).
                       .attr("width", scope.visParams.width )
                       .attr("height", scope.visParams.height);
 		//Temporary SVG for hierarchy tree
+		var genes = new Array;
 		var svgt = d3.select(element[0])
 			.append('svg')
 			.attr('width', scope.visParams.width) //Use the same height and width parameters as the heatmap.
@@ -86,28 +87,38 @@ angular.module('myApp.directives', []).
 			+ "V" + d.target.x + "H" + d.target.y;
 		};
 		function click(d){
-			var nColor = '#ffffff'; //Initial nonselected color of a node
-			var pColor = '#cccccc'; //Initial nonselected color of a branch
+			var nColor = '#ffffff'; //Initial nonselected color of a node.
+			var pColor = '#cccccc'; //Initial nonselected color of a branch.
 			var cir = d3.selectAll("svg").selectAll("circle").filter(function(db){
 				return d === db ? 1 : 0
 			}); //Selects all the circles representing nodes but only those which were the clicked circle, using datum as the equality filter.
 			var path = d3.selectAll("svg").selectAll("path").filter(function(dp){
-				return (d.x === dp.source.x && d.y === dp.source.y) ? 1 : 0
+				return (d.x === dp.source.x && d.y === dp.source.y) ? 1 : 0;
 			}); //Selects all paths but only those which have the same source coordinates as the node clicked.
 			//Check the state of the clicked node. If 'active' (color is green) swap to inactive colors and pass those colors down to all children and vice versa.
 			if(cir.style('fill') == '#00ff00'){
 					cir.style('fill', nColor);
-					path.style('stroke', pColor);
-				}
-				else{
-					nColor = '#00ff00';
-					pColor = '#00ff00';
-					cir.style('fill', nColor);
-					path.style('stroke', pColor);
-				};
+					path.transition().style('stroke', pColor).duration(500);
+			}
+			else{
+				nColor = '#00ff00';
+				pColor = '#00ff00';
+				cir.style('fill', nColor);
+				path.transition().style('stroke', pColor).duration(500);
+			};
 			if(d.children){ //Check if the node clicked is not a leaf. If the node has children, travel down the three updating the colors to indicate selection.
 				walk(d, nColor, pColor);
+			}
+			else{
+				if(nColor == '#00ff00'){
+					genes.push(d.name)
+				}
+				else{
+					var index = genes.indexOf(d.name);
+					genes.splice(index, 1);
+				};
 			};
+			alert(genes);
 		};
 		//Function to walk down the tree from a selected node and apply proper color assignments based on selection.
 		function walk(d, nColor, pColor){
@@ -116,13 +127,24 @@ angular.module('myApp.directives', []).
 				d3.selectAll("svg").selectAll("circle").filter(function(db){
 					return dc === db ? 1 : 0;
 				})
-				.style("fill",nColor);
+				.transition().style("fill",nColor).duration(500);
 				d3.selectAll("svg").selectAll("path").filter(function(dp){
 					return (dc.x === dp.source.x && dc.y === dp.source.y) ? 1 : 0;
-				}).style("stroke", pColor);
+				}).transition().style("stroke", pColor).duration(500);
 				if(dc.children){ //Check if children exist, if so, recurse the previous function.
 					walk(dc, nColor, pColor);
 				}
+				else{
+					if(nColor == '#00ff00'){
+						if(genes.indexOf(dc.name) == -1){
+							genes.push(dc.name);
+						};
+					}
+					else{
+						var index = genes.indexOf(dc.name);
+						genes.splice(index, 1);
+					}
+				};
 			});
 		};
 		var xCellScale = function(index, cols, cellPs) {
