@@ -110,12 +110,14 @@ angular.module('myApp.directives', []).
 				walk(d, nColor, pColor);
 			}
 			else{
-				if(nColor == '#00ff00'){
+				if(nColor == '#00ff00'){ //Check color to see if indicated action is a select/deselect
+					if(genes.indexOf(d.name) == -1){ //Check if gene already is in the array.
 					genes.push(d.name)
+					}
 				}
-				else{
-					var index = genes.indexOf(d.name);
-					genes.splice(index, 1);
+				else{ //Algorithm for removing genes from the list on a deselect.
+					var index = genes.indexOf(d.name); //Get the index of the given gene in the gene array.
+					genes.splice(index, 1); //Splice that gene out of the array using its gotten index.
 				};
 			};
 			alert(genes);
