@@ -46,17 +46,20 @@ angular.module('myApp.directives', []).
                       .attr("height", scope.visParams.height);
 		//Temporary SVG for hierarchy tree
 		var genes = new Array;
+		
 		var svgt = d3.select(element[0])
 			.append('svg')
 			.attr('width', scope.visParams.width) //Use the same height and width parameters as the heatmap.
 			.attr('height', scope.visParams.height) //May also be used for updating function and resizing.
 			.append('g')
 			.attr('transform','translate(40,0)');
+			
 		var cluster = d3.layout.cluster()
 			.size([scope.visParams.height, scope.visParams.width - 160])
 			.separation(function(a,b){ //Define a separation of neighboring nodes. Make neighbor distances equidistant so they can align with heatmap.
 				return a.parent == b.parent ? 1:1;
 			});
+			
 		d3.json("readme.json", function(json){ //Read the JSON that has the tree structure
 			var nodes = cluster.nodes(json) //Create the nodes based on the tree structure.
 			
@@ -89,30 +92,39 @@ angular.module('myApp.directives', []).
 		function click(d){
 			var nColor = '#ffffff'; //Initial nonselected color of a node.
 			var pColor = '#cccccc'; //Initial nonselected color of a branch.
-			var cir = d3.selectAll("svg").selectAll("circle").filter(function(db){
-				return d === db ? 1 : 0
-			}); //Selects all the circles representing nodes but only those which were the clicked circle, using datum as the equality filter.
-			var path = d3.selectAll("svg").selectAll("path").filter(function(dp){
-				return (d.x === dp.source.x && d.y === dp.source.y) ? 1 : 0;
-			}); //Selects all paths but only those which have the same source coordinates as the node clicked.
+			
+			var cir = d3.selectAll("svg") //Selects all the circles representing nodes but only those which were the clicked circle, using datum as the equality filter.
+				.selectAll("circle")
+				.filter(function(db){
+					return d === db ? 1 : 0;
+			});
+			
+			var path = d3.selectAll("svg") //Selects all paths but only those which have the same source coordinates as the node clicked.
+				.selectAll("path")
+				.filter(function(dp){
+					return (d.x === dp.source.x && d.y === dp.source.y) ? 1 : 0;
+				});
 			//Check the state of the clicked node. If 'active' (color is green) swap to inactive colors and pass those colors down to all children and vice versa.
 			if(cir.style('fill') == '#00ff00'){
-					cir.style('fill', nColor);
+					cir.style('fill', nColor)
+						.transition().attr('r', 2).duration(500);
 					path.transition().style('stroke', pColor).duration(500);
 			}
 			else{
 				nColor = '#00ff00';
 				pColor = '#00ff00';
-				cir.style('fill', nColor);
+				cir.style('fill', nColor)
+					.transition().attr('r', 5).duration(500);
 				path.transition().style('stroke', pColor).duration(500);
 			};
+			
 			if(d.children){ //Check if the node clicked is not a leaf. If the node has children, travel down the three updating the colors to indicate selection.
 				walk(d, nColor, pColor);
 			}
 			else{
 				if(nColor == '#00ff00'){ //Check color to see if indicated action is a select/deselect
 					if(genes.indexOf(d.name) == -1){ //Check if gene already is in the array.
-					genes.push(d.name)
+						genes.push(d.name)
 					}
 				}
 				else{ //Algorithm for removing genes from the list on a deselect.
@@ -120,19 +132,26 @@ angular.module('myApp.directives', []).
 					genes.splice(index, 1); //Splice that gene out of the array using its gotten index.
 				};
 			};
-			alert(genes);
 		};
 		//Function to walk down the tree from a selected node and apply proper color assignments based on selection.
 		function walk(d, nColor, pColor){
 			//alert(d.name);
 			d.children.forEach(function(dc){ //Loop through each child, recursively calling walk() as necessary.
-				d3.selectAll("svg").selectAll("circle").filter(function(db){
-					return dc === db ? 1 : 0;
-				})
-				.transition().style("fill",nColor).duration(500);
-				d3.selectAll("svg").selectAll("path").filter(function(dp){
-					return (dc.x === dp.source.x && dc.y === dp.source.y) ? 1 : 0;
-				}).transition().style("stroke", pColor).duration(500);
+				d3.selectAll("svg")
+					.selectAll("circle")
+					.filter(function(db){
+						return dc === db ? 1 : 0;
+					})
+					.transition().style("fill",nColor).duration(500)
+					.transition().attr("r", 2).duration(500);
+				
+				d3.selectAll("svg")
+					.selectAll("path")
+					.filter(function(dp){
+						return (dc.x === dp.source.x && dc.y === dp.source.y) ? 1 : 0;
+					})
+					.transition().style("stroke", pColor).duration(500);
+					
 				if(dc.children){ //Check if children exist, if so, recurse the previous function.
 					walk(dc, nColor, pColor);
 				}
