@@ -1,8 +1,6 @@
 'use strict';
 
 /* Directives */
-
-
 angular.module('myApp.directives', []).
   directive('appVersion', ['version', function(version) {
     return function(scope, elm, attrs) {
@@ -13,26 +11,28 @@ angular.module('myApp.directives', []).
   /* Heatmap visualization function.
   * 
   */
+		
     return {
-      restrict: 'E',
-      scope: {
-        inputdata:"=",
-        inputcolor:"=",
-        inputsize:"="
-      },
-      //template: '<div>{{inputdata.data}}</div>',
-      link: function (scope, element, attrs) {
-		
-		
-		//Variable Declarations
-		var debug = true;
-		
-		scope.visParams = {
-            width : 600,
-            height : 900,
-            horizontal_padding : 30,
-            vertical_padding : 10
-        };
+			
+		restrict: 'E',
+		scope: {
+			inputdata:"=",
+			inputcolor:"=",
+			pushtomarked:"&"
+		},
+		link: function (scope, element, attrs) {
+			
+				var visparams = {
+					width : 600,
+					height : 700,
+					columnlabelgutter : 80,
+					rowlabelgutter : 80,
+				};
+				
+				var vis = d3.select(element[0])
+					.append("svg")
+					.attr("width", visparams.width )
+					.attr("height", visparams.height);
         
         scope.cellParams = {
             width: 0,
@@ -42,20 +42,20 @@ angular.module('myApp.directives', []).
 		
 		var svg = d3.select(element[0])
                       .append("svg")
-                      .attr("width", scope.visParams.width )
-                      .attr("height", scope.visParams.height);
+                      .attr("width", scope.visparams.width )
+                      .attr("height", scope.visparams.height);
 		//Temporary SVG for hierarchy tree
 		var genes = new Array;
 		
 		var svgt = d3.select(element[0])
 			.append('svg')
-			.attr('width', scope.visParams.width) //Use the same height and width parameters as the heatmap.
-			.attr('height', scope.visParams.height) //May also be used for updating function and resizing.
+			.attr('width', scope.visparams.width) //Use the same height and width parameters as the heatmap.
+			.attr('height', scope.visparams.height) //May also be used for updating function and resizing.
 			.append('g')
 			.attr('transform','translate(40,0)');
 			
 		var cluster = d3.layout.cluster()
-			.size([scope.visParams.height, scope.visParams.width - 160])
+			.size([scope.visparams.height, scope.visparams.width - 160])
 			.separation(function(a,b){ //Define a separation of neighboring nodes. Make neighbor distances equidistant so they can align with heatmap.
 				return a.parent == b.parent ? 1:1;
 			});
@@ -267,134 +267,156 @@ angular.module('myApp.directives', []).
         
         var updateVisualization = function () {
 			
-			svg.selectAll("rect")
-               .data(scope.inputdata.data)
-               .transition()
-               .duration(1000)
-               .attr("height", scope.cellParams.height)
-               .attr("width", scope.cellParams.width)
-               .attr("x", function(d, i) {
-                 return xCellScale(i, scope.inputdata.columns, scope.cellParams);
-               })
-               .attr("y", function(d, i) {
-	             return yCellScale(i, scope.inputdata.rows, scope.cellParams);
-               })
-               .attr("fill", function(d) {
-                 return "rgb(" + redColorControl(d, scope.inputcolor) + "," + greenColorControl(d, scope.inputcolor) + ","+blueColorControl(d, scope.inputcolor)+")";
-               });	
+			scope.$watch('inputdata', function(newdata, olddata) {
+							
+				vis.selectAll('*').remove();
+				
+				if (!newdata) {
+					return;
+				}
+				    
+				var values = newdata.data.map(function(x){return x.value});
+				
+				var threshold = 150;
+				
+				var colorScaleForward = function(j) {	 
+					var value = d3.scale.linear()
+						.domain([d3.min(values), d3.max(values)])
+						.rangeRound([0, 255]);
+					var output = 0;
+					if (value(j) >= threshold ) {
+						var layer2 = d3.scale.linear()
+							.domain([125,255])
+							.rangeRound([0,255]);
+						output = layer2(value(j));  	
+					}
+					return output;
+				};
+
+				var colorScaleReverse = function(j) {	 
+					var value = d3.scale.linear()
+						.domain([d3.min(values), d3.max(values)])
+						.rangeRound([255, 0]);
+					var output = 0;
+					if ( value(j) >= threshold ) {
+						var layer2 = d3.scale.linear()
+							.domain([255,125])
+							.rangeRound([255, 0]);
+						output = layer2(value(j));  	
+					}
+					return output;
+				};
+
+				var redColorControl = function(j, code) {
+					var output = 0;
+					if (code == "red") {
+						output = colorScaleForward(j);
+					} else {
+						output = colorScaleForward(j);
+					}
+					return output;
+					};
+
+				var blueColorControl = function(j, code) {
+					var output = 0;
+					if (code == "blue") {
+						output = colorScaleReverse(j);
+					}
+					return output;
+				};
+
+				var greenColorControl = function(j, code) {
+					var output = 0;
+
+					if (code == "red") {
+						output = colorScaleReverse(j);
+					} else {
+						output = colorScaleForward(j);
+					}
+
+					return output;
+				};
+				
+				var cellXPosition = d3.scale.ordinal()
+						.domain(newdata.columnlabels)
+						.rangeRoundBands([visparams.rowlabelgutter, visparams.width]);
+								
+				var cellYPosition = d3.scale.ordinal()
+						.domain(newdata.rowlabels)
+						.rangeRoundBands([visparams.columnlabelgutter, visparams.height]);
+
+				var squares = vis.selectAll("rect")
+						.data(newdata.data)
+						.enter()
+						.append("rect")
+						.attr({
+							"height": function(d){
+								return .98*(cellYPosition(newdata.rowlabels[1]) - cellYPosition(newdata.rowlabels[0]));
+							},
+							"width": function(d){
+								return .98*(cellXPosition(newdata.columnlabels[1]) - cellXPosition(newdata.columnlabels[0]));
+							},
+							"x": function(d, i) { return cellXPosition(d.col); },
+							"y": function(d, i) { return cellYPosition(d.row); },
+							"fill": function(d) {
+								return "rgb(" + redColorControl(d.value, scope.inputcolor) + "," + greenColorControl(d.value, scope.inputcolor) + ","+ blueColorControl(d.value, scope.inputcolor)+")";
+								
+							},
+							"value": function(d) { return d.value; },
+							"index": function(d, i) { return i; },
+							"row": function(d, i) { return d.row; },
+							"column": function(d, i) { return d.col; }
+						})
+						.on('mouseover', function(d) {
+							vis.append("text")
+								.attr({
+									"id": "tooltip",
+									"x": cellXPosition(d.col),
+									"y": cellYPosition(d.row) + 40,
+								})
+								.text("Gene: " + d.row + " Point: " + d.col + "\n Value: " + d.value);
+						})
+						.on('mouseout', function() { d3.select('#tooltip').remove(); })
+						.on('click', function(d) {	
+							scope.$apply( function() {
+								scope.pushtomarked({input:d.row});
+							});							
+						});
+						
+				var xAxis = d3.svg.axis().scale(cellXPosition).orient("bottom");
+				var yAxis = d3.svg.axis().scale(cellYPosition).orient("left");
+				
+				vis.append('g').attr("transform", "translate(0,"+ (visparams.rowlabelgutter - 20) +")").call(xAxis);
+				vis.append('g').attr("transform", "translate(" + (visparams.columnlabelgutter) +",0)").call(yAxis);
+				
+				scope.changeColor = function(newcolor) {
+				
+					vis.selectAll('rect')
+						.transition()
+						.duration(500)
+						.attr({
+							"fill": function(d) {
+								return "rgb(" + redColorControl(d.value, newcolor) + "," + greenColorControl(d.value, newcolor) + ","+ blueColorControl(d.value, newcolor)+")";
+							}
+						});
+				};
+			});
+			
+			scope.$watch('inputcolor', function(newdata, olddata) {
+
+				if (newdata == olddata) {
+					return;
+				} 
+				if (!newdata) {
+				    return;	
+				}
+				else {
+					scope.changeColor(newdata)
+				}
+				
+				
+				
+			});
 		}
-        
-        scope.$watch('inputdata', function(foo) {
-        //Builds visualization on inputdata insert
-          
-          scope.cellParams.padding = ((scope.inputsize + 1) /3) * 3;
-          scope.cellParams.width = ((scope.inputsize + 1) /3) *Math.floor( (scope.visParams.width / scope.inputdata.columns) - scope.cellParams.padding );
-          scope.cellParams.height = scope.cellParams.width;
-          
-          if (debug) {
-            // Debug Flag for Input Data
-            
-            console.log("Input Data Change ======================================");
-            console.log("Input Data: ");
-            console.log(scope.inputdata);
-            console.log("Columns: " + scope.inputdata.columns + " (" + typeof scope.inputdata.columns);
-            console.log("Rows: " + scope.inputdata.rows + " (" + typeof scope.inputdata.rows);
-
-            // Debug Flag for Cell Params Values
-            console.log("Cell Parameters:");
-            console.log(scope.cellParams);
-            console.log("Cell Width: " + scope.cellParams.width + " (" + typeof scope.cellParams.width + ")");
-            console.log("Cell Height: " + scope.cellParams.height + " (" + typeof scope.cellParams.height + ")");
-
-            // Debug flag for Vis Params 
-            console.log("visParams:");
-            console.log(scope.visParams);
-            console.log("Width: " + scope.visParams.width + " (" + typeof scope.visParams.width + ")");
-            console.log("Height: " + scope.visParams.height + " (" + typeof scope.visParams.height + ")");
-            console.log("HR Padding: " + scope.visParams.horizontal_padding + " (" + typeof scope.visParams.horizontal_padding + ")");
-            console.log("VR Padding: " + scope.visParams.vertical_padding + " (" + typeof scope.visParams.vertical_padding + ")");
-          }
-
-          //Build Visualization from scratch
-          
-          buildVisualization();
-          
-        });
-        
-        scope.$watch('inputsize', function(newdata, olddata) {
-			
-
-          scope.cellParams.padding = ((scope.inputsize + 1) /3) * 3;
-          scope.cellParams.width = ((scope.inputsize + 1) /3) *Math.floor( (scope.visParams.width / scope.inputdata.columns) - scope.cellParams.padding );
-          scope.cellParams.height = scope.cellParams.width;
-          
-          if (debug) {
-            // Debug Flag for Input Data
-            
-            console.log("Input Data Change ======================================");
-            console.log("Input Data: ");
-            console.log(scope.inputdata);
-            console.log("Columns: " + scope.inputdata.columns + " (" + typeof scope.inputdata.columns);
-            console.log("Rows: " + scope.inputdata.rows + " (" + typeof scope.inputdata.rows);
-
-            // Debug Flag for Cell Params Values
-            console.log("Cell Parameters:");
-            console.log(scope.cellParams);
-            console.log("Cell Width: " + scope.cellParams.width + " (" + typeof scope.cellParams.width + ")");
-            console.log("Cell Height: " + scope.cellParams.height + " (" + typeof scope.cellParams.height + ")");
-
-            // Debug flag for Vis Params 
-            console.log("visParams:");
-            console.log(scope.visParams);
-            console.log("Width: " + scope.visParams.width + " (" + typeof scope.visParams.width + ")");
-            console.log("Height: " + scope.visParams.height + " (" + typeof scope.visParams.height + ")");
-            console.log("HR Padding: " + scope.visParams.horizontal_padding + " (" + typeof scope.visParams.horizontal_padding + ")");
-            console.log("VR Padding: " + scope.visParams.vertical_padding + " (" + typeof scope.visParams.vertical_padding + ")");
-          }
-          
-          //Rebuild Visualization with new sizes
-          
-          updateVisualization();
-          
-        });
-        
-        scope.$watch('inputcolor', function(newdata, olddata) {
-			
-
-          scope.cellParams.padding = ((scope.inputsize + 1) /3) * 3;
-          scope.cellParams.width = ((scope.inputsize + 1) /3) *Math.floor( (scope.visParams.width / scope.inputdata.columns) - scope.cellParams.padding );
-          scope.cellParams.height = scope.cellParams.width;
-          
-          if (debug) {
-            // Debug Flag for Input Data
-            
-            console.log("Input Data Change ======================================");
-            console.log("Input Data: ");
-            console.log(scope.inputdata);
-            console.log("Columns: " + scope.inputdata.columns + " (" + typeof scope.inputdata.columns);
-            console.log("Rows: " + scope.inputdata.rows + " (" + typeof scope.inputdata.rows);
-
-            // Debug Flag for Cell Params Values
-            console.log("Cell Parameters:");
-            console.log(scope.cellParams);
-            console.log("Cell Width: " + scope.cellParams.width + " (" + typeof scope.cellParams.width + ")");
-            console.log("Cell Height: " + scope.cellParams.height + " (" + typeof scope.cellParams.height + ")");
-
-            // Debug flag for Vis Params 
-            console.log("visParams:");
-            console.log(scope.visParams);
-            console.log("Width: " + scope.visParams.width + " (" + typeof scope.visParams.width + ")");
-            console.log("Height: " + scope.visParams.height + " (" + typeof scope.visParams.height + ")");
-            console.log("HR Padding: " + scope.visParams.horizontal_padding + " (" + typeof scope.visParams.horizontal_padding + ")");
-            console.log("VR Padding: " + scope.visParams.vertical_padding + " (" + typeof scope.visParams.vertical_padding + ")");
-          }
-          
-          //Rebuild Visualization with new sizes
-          
-          updateVisualization();
-          
-        });
-		  
-      }
-    }
-  }]);
+	}
+}]);
