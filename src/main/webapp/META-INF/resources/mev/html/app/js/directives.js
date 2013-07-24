@@ -107,7 +107,7 @@ angular.module('myApp.directives', []).
 			//Check the state of the clicked node. If 'active' (color is green) swap to inactive colors and pass those colors down to all children and vice versa.
 			if(cir.style('fill') == '#00ff00'){
 					cir.style('fill', nColor)
-						.transition().attr('r', 2).duration(500);
+						.transition().attr('r', 2).duration(500); //Change radius of nonactive nodes.
 					path.transition().style('stroke', pColor).duration(500);
 			}
 			else{
