@@ -177,4 +177,3 @@ angular.module('myApp.controllers', [])
     $scope.getPage(1);
     
   }]);
->>>>>>> jalils/master

@@ -40,22 +40,23 @@ angular.module('myApp.directives', []).
             padding: 3
         };
 		
-		var svg = d3.select(element[0])
-                      .append("svg")
-                      .attr("width", scope.visparams.width )
-                      .attr("height", scope.visparams.height);
+		// var svg = d3.select(element[0])
+                      // .append("svg")
+                      // .attr("width", visparams.width )
+                      // .attr("height", visparams.height);
+											
 		//Temporary SVG for hierarchy tree
 		var genes = new Array;
 		
 		var svgt = d3.select(element[0])
 			.append('svg')
-			.attr('width', scope.visparams.width) //Use the same height and width parameters as the heatmap.
-			.attr('height', scope.visparams.height) //May also be used for updating function and resizing.
+			.attr('width', visparams.width) //Use the same height and width parameters as the heatmap.
+			.attr('height', visparams.height) //May also be used for updating function and resizing.
 			.append('g')
 			.attr('transform','translate(40,0)');
 			
 		var cluster = d3.layout.cluster()
-			.size([scope.visparams.height, scope.visparams.width - 160])
+			.size([visparams.height, visparams.width - 160])
 			.separation(function(a,b){ //Define a separation of neighboring nodes. Make neighbor distances equidistant so they can align with heatmap.
 				return a.parent == b.parent ? 1:1;
 			});
@@ -99,8 +100,7 @@ angular.module('myApp.directives', []).
 					return d === db ? 1 : 0;
 			});
 			
-			var path = d3.selectAll("svg") //Selects all paths but only those which have the same source coordinates as the node clicked.
-				.selectAll("path")
+			var path = d3.selectAll(".link") //Selects all paths but only those which have the same source coordinates as the node clicked.
 				.filter(function(dp){
 					return (d.x === dp.source.x && d.y === dp.source.y) ? 1 : 0;
 				});
@@ -132,6 +132,7 @@ angular.module('myApp.directives', []).
 					genes.splice(index, 1); //Splice that gene out of the array using its gotten index.
 				};
 			};
+			alert(genes);
 		};
 		//Function to walk down the tree from a selected node and apply proper color assignments based on selection.
 		function walk(d, nColor, pColor){
@@ -145,8 +146,7 @@ angular.module('myApp.directives', []).
 					.transition().style("fill",nColor).duration(500)
 					.transition().attr("r", 2).duration(500);
 				
-				d3.selectAll("svg")
-					.selectAll("path")
+				d3.selectAll(".link")
 					.filter(function(dp){
 						return (dc.x === dp.source.x && dc.y === dp.source.y) ? 1 : 0;
 					})
@@ -168,6 +168,12 @@ angular.module('myApp.directives', []).
 				};
 			});
 		};
+		
+		var svg = d3.select(element[0])
+                      .append("svg")
+                      .attr("width", visparams.width )
+                      .attr("height", visparams.height);
+											
 		var xCellScale = function(index, cols, cellPs) {
             return (index%cols)*(cellPs.width+(cellPs.padding/2));         
           }
@@ -264,8 +270,6 @@ angular.module('myApp.directives', []).
                });
 					
         }
-        
-        var updateVisualization = function () {
 			
 			scope.$watch('inputdata', function(newdata, olddata) {
 							
