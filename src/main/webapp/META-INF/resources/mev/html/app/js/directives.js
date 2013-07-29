@@ -29,9 +29,10 @@ angular.module('myApp.directives', []).
 				rowlabelgutter : 80,
 			};
 			var treeheight = visparams.height;
-			var treewidth = 300;
+			var treewidth = 500;
 			var genes = new Array;
-			//SVG and D3.js of hierarchical tree.
+/************************************************/
+/*****SVG and D3.js of hierarchical tree.********/
 			var svgt = d3.select(element[0])
 				.append('svg')
 				.attr('width', treewidth)
@@ -152,7 +153,8 @@ angular.module('myApp.directives', []).
 					};
 				});
 			};
-		
+/*********Hierarchical Tree End************/
+
 		var vis = d3.select(element[0])
 					.append("svg")
 					.attr("width", visparams.width )
