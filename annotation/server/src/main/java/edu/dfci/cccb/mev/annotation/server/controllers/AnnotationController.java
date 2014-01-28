@@ -2,10 +2,10 @@ package edu.dfci.cccb.mev.annotation.server.controllers;
 
 import static edu.dfci.cccb.mev.dataset.domain.contract.Dimension.Type.COLUMN;
 import static edu.dfci.cccb.mev.dataset.domain.contract.Dimension.Type.ROW;
-import static edu.dfci.cccb.mev.dataset.rest.context.RestPathVariableDatasetRequestContextInjector.DATASET;
-import static edu.dfci.cccb.mev.dataset.rest.context.RestPathVariableDatasetRequestContextInjector.DATASET_URL_ELEMENT;
-import static edu.dfci.cccb.mev.dataset.rest.context.RestPathVariableDatasetRequestContextInjector.DIMENSION;
-import static edu.dfci.cccb.mev.dataset.rest.context.RestPathVariableDatasetRequestContextInjector.DIMENSION_URL_ELEMENT;
+import static edu.dfci.cccb.mev.dataset.rest.resolvers.DatasetPathVariableMethodArgumentResolver.DATASET_MAPPING_NAME;
+import static edu.dfci.cccb.mev.dataset.rest.resolvers.DatasetPathVariableMethodArgumentResolver.DATASET_URL_ELEMENT;
+import static edu.dfci.cccb.mev.dataset.rest.resolvers.DimensionPathVariableMethodArgumentResolver.DIMENSION_MAPPING_NAME;
+import static edu.dfci.cccb.mev.dataset.rest.resolvers.DimensionPathVariableMethodArgumentResolver.DIMENSION_URL_ELEMENT;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -104,8 +104,6 @@ public class AnnotationController extends WebApplicationObjectSupport {
     try {
       workspace.get ("shmock");
     } catch (DatasetNotFoundException e) {
-      // Dataset mockHeatmap = new DatasetMock ("shmock", "aaa,bbb,ccc",
-      // "e,f,g");
       Dimension columns =
                           new SimpleDimension (COLUMN,
                                                new ArrayList<String> (Arrays.asList ("e", "f", "g")),
@@ -144,26 +142,55 @@ public class AnnotationController extends WebApplicationObjectSupport {
 
   }
 
-  @RequestMapping (method = { GET, POST, PUT, DELETE }, value = { "/"
-                                                                  + DATASET_URL_ELEMENT + "/annotation/"
-                                                                  + DIMENSION_URL_ELEMENT + "/**" })
+  @RequestMapping(method={GET, POST, PUT, DELETE}, value="/openrefine/**")
+  public void openRefine(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
+    
+    HttpServletRequest wrappedRequest = new HttpServletRequestWrapper (request) {
+      @Override
+      public String getPathInfo () {
+        return super.getServletPath ().replace ("/annotations/openrefine", "");
+      }
+    };
+    
+    this.refineServlet.service (wrappedRequest, response);
+  }
+  
+  @RequestMapping(method={GET, POST, PUT, DELETE}, value="/import-dataset/**")
+  public void importDataset(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
+    
+    HttpServletRequest wrappedRequest = new HttpServletRequestWrapper (request) {
+      @Override
+      public String getPathInfo () {
+        return super.getServletPath ().replace ("/annotations/import-dataset", "");
+      }
+    };
+    
+    this.refineServlet.service (wrappedRequest, response);
+  }
+  
+  @RequestMapping(method={GET, POST, PUT, DELETE}, value = {"/"
+          + DATASET_URL_ELEMENT + "/annotation/"
+          + DIMENSION_URL_ELEMENT + "/{selectionName}/**"
+
+  })
   @ResponseBody
-  public void handleAnnotation (@PathVariable (DATASET) final String heatmapId,
-                                @PathVariable (DIMENSION) final String dimension,
+  public void handleAnnotationByName (@PathVariable (DATASET_MAPPING_NAME) final String heatmapId,
+                                @PathVariable (DIMENSION_MAPPING_NAME) final String dimension,
+                                @PathVariable (value="selectionName") final String selectionName,
                                 HttpServletRequest request, HttpServletResponse response) throws ServletException,
                                                                                          IOException,
                                                                                          DatasetNotFoundException {
     log.debug (String.format ("Handling annotation request: %s", request.getServletPath ()));
-
+    
     HttpServletRequest wrappedRequest = new HttpServletRequestWrapper (request) {
       @Override
       public String getPathInfo () {
-        return super.getServletPath ().replace ("/annotations/" + heatmapId + "/annotation/" + dimension, "");
+        return super.getServletPath ().replace ("/annotations/" + heatmapId + "/annotation/" + dimension + "/" + selectionName, "");
       }
     };
 
     Dataset heatmap = workspace.get (heatmapId);
-    long projectId = projectManager.getProjectID (heatmap.name ());
+    long projectId = projectManager.getProjectID (heatmap.name ()+dimension);
     if (projectId != -1) {
       if (wrappedRequest.getPathInfo ().trim ().equals ("/")) {
         if (wrappedRequest.getParameter ("reset") != null) {
@@ -176,10 +203,11 @@ public class AnnotationController extends WebApplicationObjectSupport {
     }
 
     wrappedRequest.setAttribute ("dataset", heatmap);
-    wrappedRequest.setAttribute ("dimension", dimension);
-    this.refineServlet.service (wrappedRequest, response);
+    wrappedRequest.setAttribute ("dimension", dimension);    
+    if(!selectionName.equalsIgnoreCase ("new"))
+      wrappedRequest.setAttribute ("selectionName", selectionName);
+    this.refineServlet.service (wrappedRequest, response);    
   }
-
   /**
    * Internal implementation of the ServletConfig interface, to be passed to the
    * wrapped servlet. Delegates to ServletWrappingController fields and methods

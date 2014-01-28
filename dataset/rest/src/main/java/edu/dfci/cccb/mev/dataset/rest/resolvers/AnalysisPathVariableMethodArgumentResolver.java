@@ -14,7 +14,9 @@
  */
 package edu.dfci.cccb.mev.dataset.rest.resolvers;
 
-import static java.lang.reflect.Modifier.isAbstract;
+import static edu.dfci.cccb.mev.dataset.domain.contract.Analysis.VALID_ANALYSIS_NAME_REGEX;
+
+import java.lang.reflect.Method;
 
 import javax.inject.Inject;
 
@@ -23,48 +25,54 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import org.springframework.core.MethodParameter;
 import org.springframework.web.context.request.NativeWebRequest;
-import org.springframework.web.servlet.mvc.method.annotation.PathVariableMethodArgumentResolver;
 
 import edu.dfci.cccb.mev.dataset.domain.contract.Analysis;
+import edu.dfci.cccb.mev.dataset.domain.contract.AnalysisNotFoundException;
+import edu.dfci.cccb.mev.dataset.domain.contract.Dataset;
 
 /**
  * @author levk
  * 
  */
+@SuppressWarnings ("unchecked")
 @ToString
 @EqualsAndHashCode (callSuper = false)
-public class AnalysisPathVariableMethodArgumentResolver <T extends Analysis> extends PathVariableMethodArgumentResolver {
+public class AnalysisPathVariableMethodArgumentResolver <T extends Analysis> extends AbstractTypedPathVariableMethodArgumentResolver<T> {
+
+  public static final String ANALYSIS_MAPPING_NAME = "analysis";
+  public static final String ANALYSIS_URL_ELEMENT = "{" + ANALYSIS_MAPPING_NAME + ":"
+                                                    + VALID_ANALYSIS_NAME_REGEX + "}";
 
   private @Getter final Class<T> analysisType;
-  private @Getter @Setter (onMethod = @_ (@Inject)) Analysis analysis;
+  private @Getter @Setter @Inject DatasetPathVariableMethodArgumentResolver datasetResolver;
 
   public AnalysisPathVariableMethodArgumentResolver (Class<T> analysisType) {
-    if (analysisType.isInterface () || isAbstract (analysisType.getModifiers ()))
-      throw new IllegalArgumentException (analysisType.getName () + " must be a concrete implementation");
+    super (analysisType, ANALYSIS_MAPPING_NAME);
     this.analysisType = analysisType;
   }
 
   /* (non-Javadoc)
-   * @see org.springframework.web.servlet.mvc.method.annotation.
-   * PathVariableMethodArgumentResolver
-   * #supportsParameter(org.springframework.core.MethodParameter) */
+   * @see edu.dfci.cccb.mev.dataset.rest.resolvers.
+   * AbstractTypedPathVariableMethodArgumentResolver
+   * #resolveValue(java.lang.String, org.springframework.core.MethodParameter,
+   * org.springframework.web.context.request.NativeWebRequest) */
   @Override
-  public boolean supportsParameter (MethodParameter parameter) {
-    return analysisType.isAssignableFrom (parameter.getParameterType ()) && super.supportsParameter (parameter);
+  public T resolveObject (String value, Method method, NativeWebRequest request) throws Exception {
+    return (T) datasetResolver.resolveObject (method, request).analyses ().get (value);
   }
 
   /* (non-Javadoc)
-   * @see org.springframework.web.servlet.mvc.method.annotation.
-   * PathVariableMethodArgumentResolver#resolveName(java.lang.String,
-   * org.springframework.core.MethodParameter,
+   * @see edu.dfci.cccb.mev.dataset.rest.resolvers.
+   * AbstractTypedPathVariableMethodArgumentResolver
+   * #resolveValue(java.lang.String,
    * org.springframework.web.context.request.NativeWebRequest) */
   @Override
-  protected Object resolveName (String name, MethodParameter parameter, NativeWebRequest request) throws Exception {
-    if (analysisType.isInstance (analysis))
-      return analysis;
-    else
-      throw new ClassCastException (); // TODO: correct exception
+  public T resolveObject (String value, NativeWebRequest request) throws Exception {
+    return resolveAnalysis (datasetResolver.resolveObject (request), value);
+  }
+
+  private T resolveAnalysis (Dataset dataset, String name) throws AnalysisNotFoundException {
+    return (T) dataset.analyses ().get (name);
   }
 }

@@ -16,29 +16,38 @@ package edu.dfci.cccb.mev.hcl.rest.configuration;
 
 import static edu.dfci.cccb.mev.hcl.rest.assembly.newick.NodeNewickMessageConverter.NEWICK_EXTENSION;
 import static edu.dfci.cccb.mev.hcl.rest.assembly.newick.NodeNewickMessageConverter.NEWICK_MEDIA_TYPE;
+import static java.util.Arrays.asList;
 import static org.springframework.context.annotation.ScopedProxyMode.INTERFACES;
 import static org.springframework.web.context.WebApplicationContext.SCOPE_REQUEST;
+
+import java.util.List;
+
 import lombok.ToString;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Scope;
+import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
-import edu.dfci.cccb.mev.hcl.domain.concrete.AverageAlgorithm;
-import edu.dfci.cccb.mev.hcl.domain.concrete.EuclideanMetric;
-import edu.dfci.cccb.mev.hcl.domain.concrete.TwoDimensionalHcl;
+import com.fasterxml.jackson.databind.JsonSerializer;
+
+import edu.dfci.cccb.mev.configuration.rest.prototype.MevRestConfigurerAdapter;
+import edu.dfci.cccb.mev.dataset.rest.resolvers.AnalysisPathVariableMethodArgumentResolver;
 import edu.dfci.cccb.mev.hcl.domain.contract.Hcl;
+import edu.dfci.cccb.mev.hcl.domain.contract.HclBuilder;
 import edu.dfci.cccb.mev.hcl.domain.contract.NodeBuilder;
 import edu.dfci.cccb.mev.hcl.domain.mock.MockNodeBuilder;
+import edu.dfci.cccb.mev.hcl.domain.simple.SimpleTwoDimensionalHclBuilder;
 import edu.dfci.cccb.mev.hcl.rest.assembly.json.BranchJsonSerializer;
+import edu.dfci.cccb.mev.hcl.rest.assembly.json.HclJsonSerializer;
 import edu.dfci.cccb.mev.hcl.rest.assembly.json.LeafJsonSerializer;
+import edu.dfci.cccb.mev.hcl.rest.assembly.json.SimpleHierarchicallyClusteredDimensionJsonSerializer;
+import edu.dfci.cccb.mev.hcl.rest.assembly.newick.HclNewickMessageConverter;
 import edu.dfci.cccb.mev.hcl.rest.assembly.newick.NodeNewickMessageConverter;
-import edu.dfci.cccb.mev.hcl.rest.context.RestPathVariableHclRequestContextInjector;
-import edu.dfci.cccb.mev.hcl.rest.resolvers.AlgorithmPathVariableMethodArgumentResolver;
+import edu.dfci.cccb.mev.hcl.rest.resolvers.LinkagePathVariableMethodArgumentResolver;
 import edu.dfci.cccb.mev.hcl.rest.resolvers.MetricPathVariableMethodArgumentResolver;
 
 /**
@@ -48,8 +57,7 @@ import edu.dfci.cccb.mev.hcl.rest.resolvers.MetricPathVariableMethodArgumentReso
 @Configuration
 @ToString
 @ComponentScan (basePackages = "edu.dfci.cccb.mev.hcl.rest.controllers")
-@Import (RestPathVariableHclRequestContextInjector.class)
-public class HclRestConfiguration extends WebMvcConfigurerAdapter {
+public class HclRestConfiguration extends MevRestConfigurerAdapter {
 
   @Bean
   public NodeBuilder nodeBuilder () {
@@ -58,43 +66,8 @@ public class HclRestConfiguration extends WebMvcConfigurerAdapter {
 
   @Bean
   @Scope (value = SCOPE_REQUEST, proxyMode = INTERFACES)
-  public Hcl hcl () {
-    return new TwoDimensionalHcl ();
-  }
-
-  @Bean
-  public NodeNewickMessageConverter newickMessageConverter () {
-    return new NodeNewickMessageConverter ();
-  }
-
-  @Bean
-  public LeafJsonSerializer leafJsonSerializer () {
-    return new LeafJsonSerializer ();
-  }
-
-  @Bean
-  public BranchJsonSerializer branchJsonSerializer () {
-    return new BranchJsonSerializer ();
-  }
-
-  @Bean
-  public EuclideanMetric euclideanMetric () {
-    return new EuclideanMetric ();
-  }
-
-  @Bean
-  public AverageAlgorithm averageAlgorithm () {
-    return new AverageAlgorithm ();
-  }
-
-  @Bean
-  public AlgorithmPathVariableMethodArgumentResolver algorithmPathVariableMethodArgumentResolver () {
-    return new AlgorithmPathVariableMethodArgumentResolver ();
-  }
-
-  @Bean
-  public MetricPathVariableMethodArgumentResolver metricPathVariableMethodArgumentResolver () {
-    return new MetricPathVariableMethodArgumentResolver ();
+  public HclBuilder hclBuilder () {
+    return new SimpleTwoDimensionalHclBuilder ();
   }
 
   /* (non-Javadoc)
@@ -106,5 +79,42 @@ public class HclRestConfiguration extends WebMvcConfigurerAdapter {
   @Override
   public void configureContentNegotiation (ContentNegotiationConfigurer configurer) {
     configurer.mediaType (NEWICK_EXTENSION, NEWICK_MEDIA_TYPE);
+  }
+
+  /* (non-Javadoc)
+   * @see
+   * edu.dfci.cccb.mev.configuration.rest.prototype.MevRestConfigurerAdapter
+   * #addJsonSerializers(java.util.List) */
+  @Override
+  public void addJsonSerializers (List<JsonSerializer<?>> serializers) {
+    serializers.addAll (asList (new HclJsonSerializer (),
+                                new LeafJsonSerializer (),
+                                new BranchJsonSerializer (),
+                                new SimpleHierarchicallyClusteredDimensionJsonSerializer ()));
+  }
+
+  /* (non-Javadoc)
+   * @see
+   * edu.dfci.cccb.mev.configuration.rest.prototype.MevRestConfigurerAdapter
+   * #addHttpMessageConverters(java.util.List) */
+  @Override
+  public void addHttpMessageConverters (List<HttpMessageConverter<?>> converters) {
+    converters.addAll (asList (nodeNewickMessageConverter (), new HclNewickMessageConverter ()));
+  }
+
+  @Bean
+  public NodeNewickMessageConverter nodeNewickMessageConverter () {
+    return new NodeNewickMessageConverter ();
+  }
+
+  /* (non-Javadoc)
+   * @see
+   * edu.dfci.cccb.mev.configuration.rest.prototype.MevRestConfigurerAdapter
+   * #addPreferredArgumentResolvers(java.util.List) */
+  @Override
+  public void addPreferredArgumentResolvers (List<HandlerMethodArgumentResolver> resolvers) {
+    resolvers.addAll (asList (new LinkagePathVariableMethodArgumentResolver (),
+                              new MetricPathVariableMethodArgumentResolver (),
+                              new AnalysisPathVariableMethodArgumentResolver<Hcl> (Hcl.class)));
   }
 }

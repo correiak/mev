@@ -54,17 +54,17 @@
       <version>1.4</version>
     </dependency>
 
-    <!-- MeV API -->
+    <!-- Configurers -->
 
     <dependency>
       <groupId>edu.dfci.cccb</groupId>
-      <artifactId>mev-api-client</artifactId>
+      <artifactId>mev-configuration-rest</artifactId>
       <version>BAYLIE-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>edu.dfci.cccb</groupId>
-      <artifactId>mev-api-server</artifactId>
+      <artifactId>mev-configuration-client</artifactId>
       <version>BAYLIE-SNAPSHOT</version>
     </dependency>
 
@@ -79,6 +79,12 @@
     <dependency>
       <groupId>edu.dfci.cccb</groupId>
       <artifactId>mev-dataset-rest</artifactId>
+      <version>BAYLIE-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>edu.dfci.cccb</groupId>
+      <artifactId>mev-dataset-client</artifactId>
       <version>BAYLIE-SNAPSHOT</version>
     </dependency>
 
@@ -98,12 +104,19 @@
       <version>BAYLIE-SNAPSHOT</version>
     </dependency>
 
-    <!-- Servlet API -->
+    <!-- LIMMA package -->
+
+    <dependency>
+      <groupId>edu.dfci.cccb</groupId>
+      <artifactId>mev-limma-rest</artifactId>
+      <version>BAYLIE-SNAPSHOT</version>
+    </dependency>
+
+    <!-- Servlet -->
 
     <dependency>
       <groupId>javax</groupId>
       <artifactId>javaee-web-api</artifactId>
-      <version>6.0</version>
       <scope>provided</scope>
     </dependency>
 
@@ -159,16 +172,6 @@
 
   </dependencies>
 
-  <repositories>
-
-    <repository>
-      <id>java.net</id>
-      <name>Oracle Repository</name>
-      <url>http://download.java.net/maven/2</url>
-    </repository>
-
-  </repositories>
-
   <build>
 
     <plugins>
@@ -216,6 +219,11 @@
 
       <resource>
         <directory>src/main/style</directory>
+        <filtering>false</filtering>
+      </resource>
+
+      <resource>
+        <directory>src/main/images</directory>
         <filtering>false</filtering>
       </resource>
     </resources>

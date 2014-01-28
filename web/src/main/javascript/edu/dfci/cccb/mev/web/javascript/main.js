@@ -18,6 +18,7 @@ require
             '/library/webjars/bootstrap/2.3.2/js/bootstrap.min' ],
         d3: ['/library/webjars/d3js/3.1.5/d3.min'],
         dropzone: ['/library/webjars/dropzone/3.7.1/dropzone-amd-module.min'],
+        notific8: ['notific8.min']
       },
       shim : {
         'angular' : {
@@ -32,8 +33,9 @@ require
         'bootstrap-css' : {
           deps : [ 'bootstrap' ]
         },
-        'newick':{
-          exports: 'newick'
+        'notific8' : {
+          deps : ['jquery'],
+          exports : 'notific8'
         }
 
       },
@@ -41,14 +43,19 @@ require
 
     });
 
-require ([ 'angular', 'app', 'jquery', 'bootstrap-css', 'bootstrap' ],
-    function (angular, app, jquery) {
+
+require ([ 'jquery', 'angular', 'app',  'orefine/OrefineBridge', 'bootstrap-css', 'bootstrap', 'setmanager/SetManager', 'mainpanel/MainPanel'],
+    function (jquery, angular, app, orb) {
 
       'use strict';
       var $html = angular.element (document.getElementsByTagName ('html')[0]);
       angular.element ().ready (function () {
         $html.addClass ('ng-app');
         angular.bootstrap ($html, [ app['name'] ]);
+        
       });
-
+      
+      window.OpenRefineBridge = orb;
     });
+
+

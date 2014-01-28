@@ -14,11 +14,15 @@
  */
 package edu.dfci.cccb.mev.hcl.rest.assembly.newick;
 
+import static java.nio.charset.Charset.forName;
+
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.Iterator;
+
+import lombok.ToString;
 
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
@@ -35,28 +39,23 @@ import edu.dfci.cccb.mev.hcl.domain.contract.Node;
  * @author levk
  * 
  */
+@ToString
 public class NodeNewickMessageConverter extends AbstractHttpMessageConverter<Node> {
-  private static final Charset DEFAULT_CHARSET = Charset.forName ("UTF-8");
+
+  private static final Charset DEFAULT_CHARSET = forName ("UTF-8");
   public static final String NEWICK_EXTENSION = "newick";
   private static final String NEWICK_TYPE = "application";
   public static final MediaType NEWICK_MEDIA_TYPE = new MediaType (NEWICK_TYPE,
                                                                    "x-" + NEWICK_EXTENSION,
                                                                    DEFAULT_CHARSET);
+  private static final String LEAF_DISTANCE = "0.1"; // TODO: check with Kevin!
+                                                     // this is a hack
 
   /**
    * 
    */
   public NodeNewickMessageConverter () {
     super (NEWICK_MEDIA_TYPE);
-  }
-
-  /* (non-Javadoc)
-   * @see
-   * org.springframework.http.converter.AbstractHttpMessageConverter#canWrite
-   * (java.lang.Class, org.springframework.http.MediaType) */
-  @Override
-  public boolean canWrite (Class<?> clazz, MediaType mediaType) {
-    return super.canWrite (clazz, mediaType);
   }
 
   /* (non-Javadoc)
@@ -99,7 +98,7 @@ public class NodeNewickMessageConverter extends AbstractHttpMessageConverter<Nod
   }
 
   private void write (OutputStream out, Leaf leaf) throws IOException {
-    out.write ((leaf.name () + ":0.0").getBytes ());
+    out.write ((leaf.name () + ":" + LEAF_DISTANCE).getBytes ());
   }
 
   private void write (OutputStream out, Branch branch) throws IOException {

@@ -14,21 +14,26 @@
  */
 package edu.dfci.cccb.mev.web.configuration.resolvers;
 
+import static java.util.Collections.sort;
+
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import lombok.ToString;
+import lombok.extern.log4j.Log4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.OrderComparator;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
+
+import edu.dfci.cccb.mev.configuration.rest.contract.HandlerMethodArgumentResolverConfigurer;
 
 /**
  * @author levk
@@ -42,17 +47,25 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
           ViewResolverConfiguration.class,
           WebjarResourceHandlerConfiguration.class })
 @ToString
+@Log4j
 public class ResolverConfigurations {
 
   private @Inject RequestMappingHandlerAdapter adapter;
-  private @Autowired (required = false) Collection<HandlerMethodArgumentResolver> methodArgumentResolvers;
+  private @Autowired (required = false) List<HandlerMethodArgumentResolverConfigurer> configurers;
+  private @Inject AutowireCapableBeanFactory beanFactory;
 
   @PostConstruct
   private void prioritizeCustomArgumentMethodHandlers () {
-    if (methodArgumentResolvers != null && methodArgumentResolvers.size () > 0) {
-    List<HandlerMethodArgumentResolver> argumentResolvers = new ArrayList<> (adapter.getArgumentResolvers ());
-    argumentResolvers.addAll (0, new HashSet<> (methodArgumentResolvers));
-    adapter.setArgumentResolvers (argumentResolvers);
-    }
+    List<HandlerMethodArgumentResolver> resolvers = new ArrayList<> ();
+    if (configurers != null)
+      for (HandlerMethodArgumentResolverConfigurer configurer : configurers)
+        configurer.addPreferredArgumentResolvers (resolvers);
+    for (HandlerMethodArgumentResolver resolver : resolvers)
+      beanFactory.autowireBean (resolver);
+    sort (resolvers, new OrderComparator ());
+
+    log.info ("Registering method argument resolvers " + resolvers);
+    resolvers.addAll (adapter.getArgumentResolvers ());
+    adapter.setArgumentResolvers (resolvers);
   }
 }

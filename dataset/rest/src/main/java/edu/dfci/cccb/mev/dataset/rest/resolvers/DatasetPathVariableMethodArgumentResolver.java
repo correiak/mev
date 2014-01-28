@@ -14,14 +14,17 @@
  */
 package edu.dfci.cccb.mev.dataset.rest.resolvers;
 
+import static edu.dfci.cccb.mev.dataset.domain.contract.Dataset.VALID_DATASET_NAME_REGEX;
+
+import java.lang.reflect.Method;
+
 import javax.inject.Inject;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
-import org.springframework.core.MethodParameter;
 import org.springframework.web.context.request.NativeWebRequest;
-import org.springframework.web.servlet.mvc.method.annotation.PathVariableMethodArgumentResolver;
 
 import edu.dfci.cccb.mev.dataset.domain.contract.Dataset;
 import edu.dfci.cccb.mev.dataset.domain.contract.Workspace;
@@ -30,29 +33,40 @@ import edu.dfci.cccb.mev.dataset.domain.contract.Workspace;
  * @author levk
  * 
  */
-public class DatasetPathVariableMethodArgumentResolver extends PathVariableMethodArgumentResolver {
+@ToString (exclude = "workspace")
+public class DatasetPathVariableMethodArgumentResolver extends AbstractTypedPathVariableMethodArgumentResolver<Dataset> {
+
+  public static final String DATASET_MAPPING_NAME = "dataset";
+  public static final String DATASET_URL_ELEMENT = "{" + DATASET_MAPPING_NAME + ":"
+                                                   + VALID_DATASET_NAME_REGEX + "}";
 
   private @Getter @Setter (onMethod = @_ (@Inject)) Workspace workspace;
 
-  /* (non-Javadoc)
-   * @see org.springframework.web.servlet.mvc.method.annotation.
-   * PathVariableMethodArgumentResolver
-   * #supportsParameter(org.springframework.core.MethodParameter) */
-  @Override
-  public boolean supportsParameter (MethodParameter parameter) {
-    return Dataset.class.isAssignableFrom (parameter.getParameterType ()) && super.supportsParameter (parameter);
+  /**
+   * 
+   */
+  public DatasetPathVariableMethodArgumentResolver () {
+    super (Dataset.class, DATASET_MAPPING_NAME);
+    setOrder (getOrder () - 1);
   }
 
   /* (non-Javadoc)
-   * @see org.springframework.web.servlet.mvc.method.annotation.
-   * PathVariableMethodArgumentResolver#resolveName(java.lang.String,
-   * org.springframework.core.MethodParameter,
+   * @see edu.dfci.cccb.mev.dataset.rest.resolvers.
+   * AbstractTypedPathVariableMethodArgumentResolver
+   * #resolveValue(java.lang.String, org.springframework.core.MethodParameter,
    * org.springframework.web.context.request.NativeWebRequest) */
   @Override
-  protected Object resolveName (String name, MethodParameter parameter, NativeWebRequest request) throws Exception {
-    Object value = super.resolveName (name, parameter, request);
-    if (value == null)
-      return null;
-    return workspace.get (value.toString ());
+  public Dataset resolveObject (String value, Method method, NativeWebRequest request) throws Exception {
+    return value!=null ? workspace.get (value) : null ;
+  }
+
+  /* (non-Javadoc)
+   * @see edu.dfci.cccb.mev.dataset.rest.resolvers.
+   * AbstractTypedPathVariableMethodArgumentResolver
+   * #resolveValue(java.lang.String,
+   * org.springframework.web.context.request.NativeWebRequest) */
+  @Override
+  public Dataset resolveObject (String value, NativeWebRequest request) throws Exception {
+    return resolveObject (value, null, request);
   }
 }

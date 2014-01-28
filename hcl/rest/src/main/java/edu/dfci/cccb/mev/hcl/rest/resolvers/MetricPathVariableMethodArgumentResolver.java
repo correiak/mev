@@ -14,41 +14,53 @@
  */
 package edu.dfci.cccb.mev.hcl.rest.resolvers;
 
-import javax.inject.Inject;
+import static edu.dfci.cccb.mev.hcl.domain.contract.Metric.from;
 
-import lombok.Getter;
-import lombok.Setter;
+import java.lang.reflect.Method;
 
-import org.springframework.core.MethodParameter;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
 import org.springframework.web.context.request.NativeWebRequest;
-import org.springframework.web.servlet.mvc.method.annotation.PathVariableMethodArgumentResolver;
 
+import edu.dfci.cccb.mev.dataset.rest.resolvers.AbstractTypedPathVariableMethodArgumentResolver;
+import edu.dfci.cccb.mev.hcl.domain.contract.InvalidMetricException;
 import edu.dfci.cccb.mev.hcl.domain.contract.Metric;
 
 /**
  * @author levk
  * 
  */
-public class MetricPathVariableMethodArgumentResolver extends PathVariableMethodArgumentResolver {
+@EqualsAndHashCode (callSuper = true)
+@ToString
+public class MetricPathVariableMethodArgumentResolver extends AbstractTypedPathVariableMethodArgumentResolver<Metric> {
 
-  private @Getter @Setter (onMethod = @_ (@Inject)) Metric metric;
+  public static final String METRIC_MAPPING_NAME = "metric";
+  public static final String METRIC_URL_ELEMENT = "{" + METRIC_MAPPING_NAME + "}";
 
-  /* (non-Javadoc)
-   * @see org.springframework.web.servlet.mvc.method.annotation.
-   * PathVariableMethodArgumentResolver
-   * #supportsParameter(org.springframework.core.MethodParameter) */
-  @Override
-  public boolean supportsParameter (MethodParameter parameter) {
-    return Metric.class.isAssignableFrom (parameter.getParameterType ()) && super.supportsParameter (parameter);
+  /**
+   */
+  public MetricPathVariableMethodArgumentResolver () {
+    super (Metric.class, METRIC_MAPPING_NAME);
   }
 
   /* (non-Javadoc)
-   * @see org.springframework.web.servlet.mvc.method.annotation.
-   * PathVariableMethodArgumentResolver#resolveName(java.lang.String,
-   * org.springframework.core.MethodParameter,
+   * @see edu.dfci.cccb.mev.dataset.rest.resolvers.
+   * AbstractTypedPathVariableMethodArgumentResolver
+   * #resolveObject(java.lang.String, org.springframework.core.MethodParameter,
    * org.springframework.web.context.request.NativeWebRequest) */
   @Override
-  protected Object resolveName (String name, MethodParameter parameter, NativeWebRequest request) throws Exception {
-    return metric;
+  public Metric resolveObject (String value, Method method, NativeWebRequest request) throws InvalidMetricException {
+    return from (value);
+  }
+
+  /* (non-Javadoc)
+   * @see edu.dfci.cccb.mev.dataset.rest.resolvers.
+   * AbstractTypedPathVariableMethodArgumentResolver
+   * #resolveObject(java.lang.String,
+   * org.springframework.web.context.request.NativeWebRequest) */
+  @Override
+  public Metric resolveObject (String value, NativeWebRequest request) throws InvalidMetricException {
+    return from (value);
   }
 }

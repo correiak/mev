@@ -1,6 +1,10 @@
 function ExportSetDialog() { 	
-    this._createDialog();    
+    this._createDialog();
+    
 }
+
+ExportSetDialog.prototype._lastItem=null;
+
 
 ExportSetDialog.prototype._createDialog = function() {
     var self = this;
@@ -9,14 +13,33 @@ ExportSetDialog.prototype._createDialog = function() {
     this._name="";
     this._description="";
     this._color="";
+    this._dimension="";
+    if(theProject.metadata.customMetadata){
+    	if(theProject.metadata.customMetadata.selectionName)
+    		this._name=theProject.metadata.customMetadata.selectionName;
+    	if(theProject.metadata.customMetadata.selectionDescription)
+    		this._description=theProject.metadata.customMetadata.selectionDescription;
+    	if(theProject.metadata.customMetadata.selectionColor)
+    		this._color=theProject.metadata.customMetadata.selectionColor;
+    	else
+    		this._color='#'+(0x1000000+(Math.random())*0xffffff).toString(16).substr(1,6);
+    	if(theProject.metadata.customMetadata.dimension)
+    		this._dimension=theProject.metadata.customMetadata.dimension;
+    	
+    }
+    this._elmts.setName[0].value=this._name;
+    this._elmts.setDescription[0].value=this._description;
+    this._elmts.setColor[0].value=this._color;
     
     //this._elmts.controls.find("textarea").bind("keyup change input",function() { self._scheduleUpdate(); });
     
     //this._elmts.resetButton.html($.i18n._('core-buttons')["reset-template"]);
-    this._elmts.exportSetButton.html($.i18n._('core-buttons')["export"]);
+    this._elmts.exportSetButton.html("Save");
+    this._elmts.exportSetAndExitButton.html("Save and Close");
     this._elmts.cancelSetButton.html($.i18n._('core-buttons')["cancel"]);
     
     this._elmts.exportSetButton.click(function() { if(self._validate()){self._exportAjax(); self._dismiss(); }});
+    this._elmts.exportSetAndExitButton.click(function() { if(self._validate()){self._exportAjax(); self._dismiss(); Refine._close(); }});
     this._elmts.cancelSetButton.click(function() { self._dismiss(); });
     /*
     this._elmts.resetButton.click(function() {
@@ -35,7 +58,7 @@ ExportSetDialog.prototype._dismiss = function() {
 ExportSetDialog.prototype._validate = function()
 {
 	  //var name = window.prompt("Esport set name", "open-refine-exported-set");
-	  var name = this._elmts.setName[0].value;	  
+	  var name = this._elmts.setName[0].value.trim();	  
 	  if (!name) {
 		this._elmts.errorMessage.html("Name is required");
 		this._elmts.setName[0].focus();
@@ -60,26 +83,44 @@ ExportSetDialog.prototype._validate = function()
 };
 
 ExportSetDialog.prototype._exportAjax = function(){
-	$.ajax({
-	    type: "POST",
-	    url: "command/core/export-set",
-	    data: { 
-	    	"project" : theProject.id, 
-	    	"name" : name,
-	    	"set-name" : this._name,
-	    	"set-description" : this._description,
-	    	"set-color" : this._color,
-	    	"engine" : JSON.stringify(ui.browsingEngine.getJSON())
-	    	},
-	    dataType: "json",
-	    success: function (data) {
-	      if (data && typeof data.code != 'undefined' && data.code == "ok") {
-	        alert("Set saved succesfully");
-	      } else {
-	        alert($.i18n._('core-index')["error-rename"]+" " + data.message);
-	      }
-	    }
-	  });
+	var postRequest = {
+		    type: "POST",
+		    url: "command/core/export-set",
+		    data: { 
+		    	"project" : theProject.id, 
+		    	"name" : name,
+		    	"selectionName" : this._name,
+		    	"selectionDescription" : this._description,
+		    	"selectionColor" : this._color,
+		    	"selectionFacetLink" : Refine.getPermanentLink(),
+		    	"engine" : JSON.stringify(ui.browsingEngine.getJSON())
+		    	},
+		    dataType: "json",
+		    success: function (data) {
+		      if (data && typeof data.code != 'undefined' && data.code == "ok") {
+		        //alert("Set saved succesfully");		        
+		        parent.OpenRefineBridge.addSelectionSet(Refine._lastItem);
+		        var currentUrl = window.location.href;
+		        console.log("currentUrl:"+currentUrl);
+		        var newUrl = currentUrl.replace("/new/", "/"+Refine._lastItem.name+"/");
+		        console.log("newUrl:"+newUrl);
+		        window.location.replace(newUrl);
+		      } else {
+		        alert($.i18n._('core-index')["error-rename"]+" " + data.message);
+		      }
+		    }
+		  };
+		 
+		Refine._lastItem={
+			name: this._name,
+			dimension: this._dimension,
+			properties: {
+				selectionDescription: this._description,
+				selectionColor: this._color,
+				selectionFacetLink: Refine.getPermanentLink(),
+			}
+		};		
+		$.ajax(postRequest);
 };
 
 ExportSetDialog.prototype._export = function() {  
@@ -96,17 +137,17 @@ ExportSetDialog.prototype._export = function() {
 	  .appendTo(form);
 	  
 	  $('<input />')
-	  .attr("name", "set-name")
+	  .attr("name", "selectionName")
 	  .attr("value", this._name)
 	  .appendTo(form);
 	  
 	  $('<input />')
-	  .attr("name", "set-description")
+	  .attr("name", "selectiondescription")
 	  .attr("value", this._description)
 	  .appendTo(form);
 	  
 	  $('<input />')
-	  .attr("name", "set-color")
+	  .attr("name", "selectioncolor")
 	  .attr("value", this._color)
 	  .appendTo(form);
 	  

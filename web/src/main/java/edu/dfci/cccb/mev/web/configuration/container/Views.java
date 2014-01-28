@@ -14,10 +14,10 @@
  */
 package edu.dfci.cccb.mev.web.configuration.container;
 
-import static edu.dfci.cccb.mev.api.client.support.view.ViewBuilders.freemarker;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerView;
+
+import edu.dfci.cccb.mev.dataset.client.support.freemarker.FreeMarkerViewBuilder;
 
 /**
  * @author levk
@@ -26,116 +26,152 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerView;
 public class Views {
 
   @Bean
-  public FreeMarkerView home () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/home.ftl").build ();
+  public FreeMarkerView home (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/home.ftl").build ();
   }
 
   @Bean
-  public FreeMarkerView api () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/api.ftl").build ();
+  public FreeMarkerView api (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/api.ftl").build ();
   }
 
   // Elements
 
   @Bean (name = "elements/view1")
-  public FreeMarkerView elementView1 () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/view1.ftl").build ();
+  public FreeMarkerView elementView1 (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/view1.ftl").build ();
   }
   
-  @Bean (name = "elements/menubar")
-  public FreeMarkerView elementMenubar () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/menubar.ftl").build ();
+  @Bean (name = "elements/heatmapNavigation")
+  public FreeMarkerView elementHeatmapNavigation (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/heatmapNavigation.ftl").build ();
+  }
+
+  @Bean (name = "elements/analysisMenuBar")
+  public FreeMarkerView elementAnalysisMenuBar (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/analysisMenuBar.ftl").build ();
   }
   
+  @Bean (name = "elements/sideNavigationBar")
+  public FreeMarkerView elementSideNavigationBar (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/sideNavigationBar.ftl").build ();
+  }
+
   @Bean (name = "elements/expressionPanel")
-  public FreeMarkerView elementExpressionPanel () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/expressionPanel.ftl").build ();
+  public FreeMarkerView elementExpressionPanel (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/expressionPanel.ftl").build ();
   }
 
-  @Bean (name = "elements/analysisPanel")
-  public FreeMarkerView elementanalysisPanel () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/analysisPanel.ftl").build ();
-  }
-  
   @Bean (name = "elements/hierarchicalbody")
-  public FreeMarkerView elementHierarchicalbody () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/hierarchicalbody.ftl").build ();
-  }
-  
-  @Bean (name = "elements/kMeansBody")
-  public FreeMarkerView elementKMeansBody () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/kMeansBody.ftl").build ();
-  }
-  
-  @Bean (name = "elements/limmaBody")
-  public FreeMarkerView elementLimmaBody () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/limmaBody.ftl").build ();
-  }
-  
-  @Bean (name = "elements/modal")
-  public FreeMarkerView elementModal () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/modal.ftl").build ();
-  }
-  
-  @Bean (name = "elements/prevlimmashell")
-  public FreeMarkerView elementPrevlimmashell () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/prevlimmashell.ftl").build ();
-  }
-  
-  @Bean (name = "elements/table")
-  public FreeMarkerView elementTable () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/table.ftl").build ();
-  }
-  
-  @Bean (name = "elements/mainNavigation")
-  public FreeMarkerView elementMainNavigation () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/mainNavigation.ftl").build ();
-  }
-  
-  @Bean (name = "elements/heatmapPanels")
-  public FreeMarkerView elementHeatmapPanels () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/heatmapPanels.ftl").build ();
-  }
-  
-  @Bean (name = "elements/visHeatmap")
-  public FreeMarkerView elementVisHeatmap () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/visHeatmap.ftl").build ();
-  }
-  
-  @Bean (name = "elements/uploadDragAndDrop")
-  public FreeMarkerView elementUploadDragAndDrop () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/uploadDragAndDrop.ftl").build ();
-  }
-  
-  @Bean (name = "elements/datasetSummary")
-  public FreeMarkerView elementDatasetSummary () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/datasetSummary.ftl").build ();
-  }
-  
-  @Bean (name = "elements/d3RadialTree")
-  public FreeMarkerView elementD3RadialTree () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/d3RadialTree.ftl").build ();
-  }
-  
-  @Bean (name = "elements/uploadsTable")
-  public FreeMarkerView elementUploadsTable () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/elements/uploadsTable.ftl").build ();
+  public FreeMarkerView elementHierarchicalbody (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/hierarchicalbody.ftl").build ();
   }
 
+  @Bean (name = "elements/kMeansBody")
+  public FreeMarkerView elementKMeansBody (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/kMeansBody.ftl").build ();
+  }
+
+  @Bean (name = "elements/limmaBody")
+  public FreeMarkerView elementLimmaBody (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/limmaBody.ftl").build ();
+  }
+
+  @Bean (name = "elements/modal")
+  public FreeMarkerView elementModal (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/modal.ftl").build ();
+  }
+
+  @Bean (name = "elements/limmaAccordion")
+  public FreeMarkerView elementLimmaAccordion (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/limmaAccordion.ftl").build ();
+  }
+  
+  @Bean (name = "elements/clusterAccordion")
+  public FreeMarkerView elementClusterAccordion (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/clusterAccordion.ftl").build ();
+  }
+
+  @Bean (name = "elements/table")
+  public FreeMarkerView elementTable (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/table.ftl").build ();
+  }
+
+  @Bean (name = "elements/mainNavigation")
+  public FreeMarkerView elementMainNavigation (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/mainNavigation.ftl").build ();
+  }
+
+  @Bean (name = "elements/heatmapPanels")
+  public FreeMarkerView elementHeatmapPanels (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/heatmapPanels.ftl").build ();
+  }
+
+  @Bean (name = "elements/visHeatmap")
+  public FreeMarkerView elementVisHeatmap (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/visHeatmap.ftl").build ();
+  }
+
+  @Bean (name = "elements/uploadDragAndDrop")
+  public FreeMarkerView elementUploadDragAndDrop (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/uploadDragAndDrop.ftl").build ();
+  }
+
+  @Bean (name = "elements/datasetSummary")
+  public FreeMarkerView elementDatasetSummary (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/datasetSummary.ftl").build ();
+  }
+
+  @Bean (name = "elements/d3RadialTree")
+  public FreeMarkerView elementD3RadialTree (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/d3RadialTree.ftl").build ();
+  }
+
+  @Bean (name = "elements/uploadsTable")
+  public FreeMarkerView elementUploadsTable (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/uploadsTable.ftl").build ();
+  }
+
+  //SetManager templates  
+  @Bean (name="elements/setmanager/selectionSetManager")
+  public FreeMarkerView selectionSetManager(FreeMarkerViewBuilder builder){    
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/setmanager/selectionSetManager.ftl").build ();
+  }
+  @Bean (name="elements/setmanager/selectionSetList")
+  public FreeMarkerView selection(FreeMarkerViewBuilder builder){    
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/setmanager/selectionSetList.ftl").build ();
+  }
+  @Bean (name="elements/setmanager/selectionSetEditForm")
+  public FreeMarkerView selectionSetEditForm(FreeMarkerViewBuilder builder){    
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/setmanager/selectionSetEditForm.ftl").build ();
+  }
+  @Bean (name="elements/mainpanel/MainPanel")
+  public FreeMarkerView mainPanel(FreeMarkerViewBuilder builder){    
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/mainpanel/MainPanel.ftl").build ();
+  }
+
+  
+  @Bean (name="elements/fcuk")
+  public FreeMarkerView fcuk(FreeMarkerViewBuilder builder){    
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/elements/fcuk.ftl").build ();
+  }
+  
+  
   // Partials
 
   @Bean (name = "partials/partial1")
-  public FreeMarkerView partial1 () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/partials/partial1.ftl").build ();
+  public FreeMarkerView partial1 (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/partials/partial1.ftl").build ();
   }
-  
+
   @Bean (name = "partials/heatmap")
-  public FreeMarkerView heatmap () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/partials/heatmap.ftl").build ();
+  public FreeMarkerView heatmap (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/partials/heatmap.ftl").build ();
+  }
+
+  @Bean (name = "partials/importItems")
+  public FreeMarkerView importitems (FreeMarkerViewBuilder builder) {
+    return builder.setUrl ("/edu/dfci/cccb/mev/web/views/partials/importItems.ftl").build ();
   }
   
-  @Bean (name = "partials/importItems")
-  public FreeMarkerView importitems () {
-    return freemarker ().url ("/edu/dfci/cccb/mev/web/views/partials/importItems.ftl").build ();
-  }
 }

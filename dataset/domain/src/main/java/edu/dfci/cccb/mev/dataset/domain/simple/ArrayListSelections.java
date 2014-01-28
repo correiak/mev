@@ -17,14 +17,19 @@ package edu.dfci.cccb.mev.dataset.domain.simple;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
+
+import javax.inject.Inject;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.Synchronized;
 import lombok.ToString;
+import lombok.experimental.Accessors;
 import edu.dfci.cccb.mev.dataset.domain.contract.Selection;
+import edu.dfci.cccb.mev.dataset.domain.contract.SelectionBuilder;
 import edu.dfci.cccb.mev.dataset.domain.contract.SelectionNotFoundException;
 import edu.dfci.cccb.mev.dataset.domain.prototype.AbstractSelections;
 
@@ -34,9 +39,11 @@ import edu.dfci.cccb.mev.dataset.domain.prototype.AbstractSelections;
  */
 @EqualsAndHashCode (callSuper = true)
 @ToString
+@Accessors (fluent = false, chain = true)
 public class ArrayListSelections extends AbstractSelections {
 
   private final ArrayList<Selection> selections = new ArrayList<> ();
+  private @Getter @Setter (onMethod = @_ (@Inject)) SelectionBuilder builder;
 
   /* (non-Javadoc)
    * @see
@@ -114,7 +121,7 @@ public class ArrayListSelections extends AbstractSelections {
   }
 
   @Override
-  public void put (String name, Properties properties, List<String> keys) {
-    put (new SimpleSelection (name, properties, keys));
+  public Collection<Selection> getAll () { 
+    return Collections.unmodifiableList (selections);
   }
 }

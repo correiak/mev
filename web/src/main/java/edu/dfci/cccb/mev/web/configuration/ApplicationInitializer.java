@@ -25,6 +25,7 @@ import org.springframework.web.servlet.DispatcherServlet;
 import edu.dfci.cccb.mev.annotation.server.configuration.AnnotationServerConfiguration;
 import edu.dfci.cccb.mev.dataset.rest.configuration.DatasetRestConfiguration;
 import edu.dfci.cccb.mev.hcl.rest.configuration.HclRestConfiguration;
+import edu.dfci.cccb.mev.limma.rest.configuration.LimmaRestConfiguration;
 import edu.dfci.cccb.mev.web.configuration.container.ContainerConfigurations;
 
 /**
@@ -43,16 +44,17 @@ public class ApplicationInitializer implements WebApplicationInitializer {
 
     mvcContext.register (DispatcherConfiguration.class, PersistenceConfiguration.class, ContainerConfigurations.class);
 
-    // mvcContext.register (HeatmapServerConfiguration.class,
-    // HeatmapClientConfiguration.class);
-    // mvcContext.register (AnnotationServerConfiguration.class);
-
     mvcContext.register (DatasetRestConfiguration.class);
     mvcContext.register (AnnotationServerConfiguration.class);
     mvcContext.register (HclRestConfiguration.class);
+    mvcContext.register (LimmaRestConfiguration.class);
 
-    Dynamic dispatcher = servletContext.addServlet ("dispatcher", new DispatcherServlet (mvcContext));
-    dispatcher.setLoadOnStartup (1);
-    dispatcher.addMapping ("/");
+    DispatcherServlet dispatcher = new DispatcherServlet (mvcContext);
+    dispatcher.setThreadContextInheritable (true); // Hack until proper MeV
+                                                   // context scopes are
+                                                   // implemented
+    Dynamic registration = servletContext.addServlet ("dispatcher", dispatcher);
+    registration.setLoadOnStartup (1);
+    registration.addMapping ("/");
   }
 }

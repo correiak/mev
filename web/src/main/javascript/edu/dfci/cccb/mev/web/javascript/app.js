@@ -1,9 +1,10 @@
-define(['angular', 'directives', 'services', 'controllers'], function(angular){
+define(['angular', 'directives', 'services', 'controllers', 'setmanager/SetManager'], function(angular){
 	'use strict';
 	return angular.module('myApp', [
 	     'myApp.directives', 
 	     'myApp.services',
-	     'myApp.controllers'])
+	     'myApp.controllers',
+	     'Mev.SetManager'])
 	.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
 	  
 	  $routeProvider
@@ -16,8 +17,9 @@ define(['angular', 'directives', 'services', 'controllers'], function(angular){
 			  controller: 'HeatmapCtrl'
 		  })
 		  .when('/home', {
-        templateUrl: '/container/view/partials/importItems'
-      });
+              templateUrl: '/container/view/partials/importItems',
+              controller: 'ImportsCtrl'
+          });
 		  
 		  $routeProvider.otherwise({redirectTo: '/home'});
 		  

@@ -25,12 +25,12 @@
       <version>2.1.0</version>
     </dependency>
 
-    <!-- MeV Common API -->
+    <!-- MetaModel -->
 
     <dependency>
-      <groupId>edu.dfci.cccb</groupId>
-      <artifactId>mev-api-common</artifactId>
-      <version>BAYLIE-SNAPSHOT</version>
+      <groupId>org.eobjects.metamodel</groupId>
+      <artifactId>MetaModel-full</artifactId>
+      <version>3.4.5</version>
     </dependency>
 
   </dependencies>

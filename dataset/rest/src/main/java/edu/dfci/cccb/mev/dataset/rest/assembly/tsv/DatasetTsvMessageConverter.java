@@ -15,7 +15,6 @@
 package edu.dfci.cccb.mev.dataset.rest.assembly.tsv;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 
 import javax.inject.Inject;
 
@@ -25,39 +24,22 @@ import lombok.ToString;
 
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpOutputMessage;
-import org.springframework.http.MediaType;
-import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 
 import edu.dfci.cccb.mev.dataset.domain.contract.ComposerFactory;
 import edu.dfci.cccb.mev.dataset.domain.contract.Dataset;
-import edu.dfci.cccb.mev.dataset.domain.contract.DatasetBuilder;
 import edu.dfci.cccb.mev.dataset.domain.contract.DatasetComposingException;
+import edu.dfci.cccb.mev.dataset.rest.assembly.tsv.prototype.AbstractTsvHttpMessageConverter;
 
 /**
  * @author levk
  * 
  */
 @ToString
-public class DatasetTsvMessageConverter extends AbstractHttpMessageConverter<Dataset> {
-
-  private static final Charset DEFAULT_CHARSET = Charset.forName ("UTF-8");
-  public static final String TSV_EXTENSION = "tsv";
-  private static final String TSV_TYPE = "application";
-  public static final MediaType TSV_MEDIA_TYPE = new MediaType (TSV_TYPE,
-                                                                "x-" + TSV_EXTENSION,
-                                                                DEFAULT_CHARSET);
+public class DatasetTsvMessageConverter extends AbstractTsvHttpMessageConverter<Dataset> {
 
   private @Getter @Setter (onMethod = @_ (@Inject)) ComposerFactory composer;
-  private @Getter @Setter (onMethod = @_ (@Inject)) DatasetBuilder builder;
-
-  /**
-   * 
-   */
-  public DatasetTsvMessageConverter () {
-    super (TSV_MEDIA_TYPE);
-  }
 
   /* (non-Javadoc)
    * @see

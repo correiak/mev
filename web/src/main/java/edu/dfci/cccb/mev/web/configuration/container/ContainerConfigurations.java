@@ -16,21 +16,19 @@ package edu.dfci.cccb.mev.web.configuration.container;
 
 import static org.springframework.context.annotation.FilterType.ANNOTATION;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.servlet.RequestToViewNameTranslator;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
-import edu.dfci.cccb.mev.api.client.support.injectors.InjectorRegistry;
-import edu.dfci.cccb.mev.api.client.support.injectors.ViewRegistrar;
-import edu.dfci.cccb.mev.web.domain.reflection.Reflection;
+import edu.dfci.cccb.mev.dataset.client.contract.AnnotatedClassViewRegistrar;
+import edu.dfci.cccb.mev.dataset.client.contract.JavascriptInjectorRegistry;
+import edu.dfci.cccb.mev.dataset.client.prototype.MevClientConfigurerAdapter;
+import edu.dfci.cccb.mev.web.domain.reflection.Reflector;
 import edu.dfci.cccb.mev.web.domain.reflection.spring.SpringReflector;
 
 /**
@@ -41,24 +39,31 @@ import edu.dfci.cccb.mev.web.domain.reflection.spring.SpringReflector;
 @ComponentScan (basePackages = "edu.dfci.cccb.mev.web",
                 excludeFilters = @Filter (type = ANNOTATION, value = Configuration.class),
                 includeFilters = @Filter (type = ANNOTATION, value = { Controller.class, ControllerAdvice.class }))
-public class ContainerConfigurations extends WebMvcConfigurerAdapter {
-
-  private @Inject ViewRegistrar views;
-  private @Inject InjectorRegistry injectors;
+public class ContainerConfigurations extends MevClientConfigurerAdapter {
 
   @Bean
-  public Reflection reflection () {
+  public Reflector reflection () {
     return new SpringReflector ();
   }
 
-  @PostConstruct
-  public void registerViews () {
-    views.registerAnnotatedViewBeanClasses (Views.class);
+  /* (non-Javadoc)
+   * @see
+   * edu.dfci.cccb.mev.dataset.client.prototype.MevClientConfigurerAdapter#
+   * registerAnnotatedClassViews
+   * (edu.dfci.cccb.mev.dataset.client.contract.AnnotatedClassViewRegistrar) */
+  @Override
+  public void registerAnnotatedClassViews (AnnotatedClassViewRegistrar annotatedClassViewRegistrar) {
+    annotatedClassViewRegistrar.register (Views.class);
   }
 
-  @PostConstruct
-  public void injectJavaScript () {
-    injectors.add ("/container/javascript/main.js");
+  /* (non-Javadoc)
+   * @see
+   * edu.dfci.cccb.mev.dataset.client.prototype.MevClientConfigurerAdapter#
+   * registerJavascriptInjectors
+   * (edu.dfci.cccb.mev.dataset.client.contract.JavascriptInjectorRegistry) */
+  @Override
+  public void registerJavascriptInjectors (JavascriptInjectorRegistry registry) {
+    registry.register ("/container/javascript/main.js");
   }
 
   /* (non-Javadoc)
@@ -72,5 +77,12 @@ public class ContainerConfigurations extends WebMvcConfigurerAdapter {
             .addResourceLocations ("classpath:/edu/dfci/cccb/mev/web/javascript/");
     registry.addResourceHandler ("/container/style/**")
             .addResourceLocations ("classpath:/edu/dfci/cccb/mev/web/style/");
+    registry.addResourceHandler ("/container/images/**")
+            .addResourceLocations ("classpath:/edu/dfci/cccb/mev/web/images/");
+  }
+  
+  @Bean (name="viewNameTranslator")
+  public RequestToViewNameTranslator viewNameTranslator(){
+    return new MevRequestToViewNameTranslator ();
   }
 }
