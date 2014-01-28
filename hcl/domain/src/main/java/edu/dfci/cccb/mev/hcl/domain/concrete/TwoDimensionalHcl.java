@@ -179,15 +179,16 @@ public class TwoDimensionalHcl extends AbstractHcl {
     log.debug ("Populating distance matrix");
     for (int i = 0; i < size; i++) {
       for (int j = i + 1; j < size; j++) {
-        // Euclidean distance calculation.
+        // Distance metric calculation.
         double total = 0;
+		String metric; // User-selected metric to go here.
         for (int k = 0; k < other; k++) {
           double left = dimensionType == ROW ? original.getEntry (i, k) : original.getEntry (k, i);
           double right = dimensionType == ROW ? original.getEntry (j, k) : original.getEntry (k, j);
           if (!isNaN (left) && !isNaN (right) && !isInfinite (left) && !isInfinite (right))
-            total += Math.pow (left - right, 2);
+            total += DistanceMetric.calc(left, right, metric);
         }
-        double distance = Math.pow (total, 0.5);
+        double distance = DistanceMetric.distance(total, metric, other);
 
         distances[i][j] = distance;
         distances[j][i] = distance;
@@ -230,13 +231,10 @@ public class TwoDimensionalHcl extends AbstractHcl {
         int n = 0;
         // Get genes from each cluster. Distance is measured from each element
         // to every element.
-        for (int current : traverse (dimension.keys (), c))
-          for (int created : traverse (dimension.keys (), cluster)) {
-            distance += distances[current][created];
-            n++;
-          }
-
-        distance = distance / n;
+		
+		ArrayList<Integer> current_ele = traverse(dimension.keys(), c);
+        ArrayList<Integer> created_ele = traverse(dimension.keys(), cluster);
+		distance = ClusteringAlgorithm.cluster(method, current_ele, created_ele, distances);
 
         int[] valuePair = { e.getKey (), id };
         sorted.put (distance, valuePair);
